@@ -1,6 +1,6 @@
 package JavaScript::HashRef::Decode;
 {
-  $JavaScript::HashRef::Decode::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::VERSION = '0.130142';
 }
 
 ## ABSTRACT: JavaScript "simple object" (hashref) decoder
@@ -52,33 +52,51 @@ string_single_quoted:
         value => "$1",
     }, 'JavaScript::HashRef::Decode::STRING';
 }
-key:        m{[a-zA-Z_][a-zA-Z_0-9]*}
+unescaped_key:        m{[a-zA-Z_][a-zA-Z_0-9]*}
 {
     $return = bless {
         key => $item[1],
     }, 'JavaScript::HashRef::Decode::KEY';
 }
-undefined: "undefined"
+string: string_single_quoted | string_double_quoted
+key:       unescaped_key | string
+token_undefined:    "undefined"
 {
     $return = bless {
     }, 'JavaScript::HashRef::Decode::UNDEFINED';
 }
-string: string_single_quoted | string_double_quoted
-any_value:  number | string | hashref | arrayref | undefined
-key_value:  key ":" any_value
+token_null:         "null"
+{
+    $return = bless {
+    }, 'JavaScript::HashRef::Decode::UNDEFINED';
+}
+undefined: token_undefined | token_null
+true:  "true"
+{
+    $return = bless {
+    }, 'JavaScript::HashRef::Decode::TRUE';
+}
+false:  "false"
+{
+    $return = bless {
+    }, 'JavaScript::HashRef::Decode::FALSE';
+}
+boolean: true | false
+any_value:  number | string | hashref | arrayref | undefined | boolean
+tuple:  key ":" any_value
 {
     $return = bless {
         key => $item[1],
         value => $item[3],
-    }, 'JavaScript::HashRef::Decode::KEY_VALUE';
+    }, 'JavaScript::HashRef::Decode::TUPLE';
 }
 list_of_values: <leftop: any_value "," any_value>(s?)
 arrayref:   "[" list_of_values "]"
 {
     $return = bless $item[2], 'JavaScript::HashRef::Decode::ARRAYREF';
 }
-key_values: <leftop: key_value /,/ key_value>(s?)
-hashref:    "{" key_values "}"
+tuples:     <leftop: tuple "," tuple>(s?)
+hashref:    "{" tuples "}"
 {
     $return = bless $item[2], 'JavaScript::HashRef::Decode::HASHREF';
 }
@@ -89,6 +107,24 @@ our $parser;
 =head1 NAME
 
 JavaScript::HashRef::Decode - a JavaScript "data hashref" decoder for Perl
+
+=head1 DESCRIPTION
+
+This module "decodes" a simple data-only JavaScript "object" and returns a
+Perl hashref constructed from the data contained in it.
+
+It only supports "data" which comprises of: hashrefs, arrayrefs, single- and
+double-quoted strings, numbers, and "special" token the likes of "undefined",
+"true", "false", "null".
+
+It does not support functions, nor is it meant to be an all-encompassing parser
+for a JavaScript object.
+
+If you feel like the JavaScript structure you'd like to parse cannot
+effectively be parsed by this module, feel free to look into the
+L<Parse::RecDescent> grammar of this module.
+
+Patches are always welcome.
 
 =head1 SYNOPSIS
 
@@ -140,7 +176,7 @@ sub decode_js {
 
 package JavaScript::HashRef::Decode::NUMBER;
 {
-  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130142';
 }
 
 sub out {
@@ -149,7 +185,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::STRING;
 {
-  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130142';
 }
 
 =item STRINGS
@@ -170,16 +206,34 @@ sub out {
 
 package JavaScript::HashRef::Decode::UNDEFINED;
 {
-  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130142';
 }
 
 sub out {
     return undef;
 }
 
+package JavaScript::HashRef::Decode::TRUE;
+{
+  $JavaScript::HashRef::Decode::TRUE::VERSION = '0.130142';
+}
+
+sub out {
+    return (1 == 1);
+}
+
+package JavaScript::HashRef::Decode::FALSE;
+{
+  $JavaScript::HashRef::Decode::FALSE::VERSION = '0.130142';
+}
+
+sub out {
+    return (1 == 0);
+}
+
 package JavaScript::HashRef::Decode::ARRAYREF;
 {
-  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130142';
 }
 
 sub out {
@@ -188,24 +242,16 @@ sub out {
 
 package JavaScript::HashRef::Decode::KEY;
 {
-  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130142';
 }
-
-=item KEYS
-
-JavaScript keys cannot be strings or numbers, but an "identifier" which starts
-with a letter or underscore, and contains letters, underscores or numbers
-afterwards.
-
-=cut
 
 sub out {
     return $_[ 0 ]->{key};
 }
 
-package JavaScript::HashRef::Decode::KEY_VALUE;
+package JavaScript::HashRef::Decode::TUPLE;
 {
-  $JavaScript::HashRef::Decode::KEY_VALUE::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::TUPLE::VERSION = '0.130142';
 }
 
 sub out {
@@ -214,7 +260,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::HASHREF;
 {
-  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130141';
+  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130142';
 }
 
 sub out {
@@ -226,6 +272,8 @@ sub out {
 =head1 SEE ALSO
 
 L<Parse::RecDescent>
+
+The ECMAScript Object specification.
 
 =head1 AUTHOR
 
