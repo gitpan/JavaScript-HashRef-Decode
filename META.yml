@@ -21,4 +21,4 @@ requires:
 resources:
   bugtracker: https://github.com/mfontani/JavaScript-HashRef-Decode/issues
   repository: git://github.com/mfontani/JavaScript-HashRef-Decode.git
-version: 0.130140
+version: 0.130141

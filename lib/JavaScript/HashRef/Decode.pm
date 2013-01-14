@@ -1,6 +1,6 @@
 package JavaScript::HashRef::Decode;
 {
-  $JavaScript::HashRef::Decode::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::VERSION = '0.130141';
 }
 
 ## ABSTRACT: JavaScript "simple object" (hashref) decoder
@@ -86,6 +86,26 @@ END_GRAMMAR
 
 our $parser;
 
+=head1 NAME
+
+JavaScript::HashRef::Decode - a JavaScript "data hashref" decoder for Perl
+
+=head1 SYNOPSIS
+
+    use JavaScript::HashRef::Decode qw<decode_js>;
+    use Data::Dumper::Concise;
+    my $js   = q!{ foo: "bar", baz: { quux: 123 } }!;
+    my $href = decode_js($js);
+    print Dumper $href;
+    {
+        baz => {
+            quux => 123
+        },
+        foo => "bar"
+    }
+
+=head1 EXPORTED SUBROUTINES
+
 =head2 C<decode_js($str)>
 
 Given a JavaScript object thing (i.e. an hashref), returns a Perl hashref
@@ -112,7 +132,7 @@ sub decode_js {
 # For each "type", provide an ->out function which returns the proper Perl type
 # for the structure, possibly recursively
 
-=head2 CAVEATS & BUGS
+=head1 CAVEATS & BUGS
 
 =over
 
@@ -120,7 +140,7 @@ sub decode_js {
 
 package JavaScript::HashRef::Decode::NUMBER;
 {
-  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130141';
 }
 
 sub out {
@@ -129,7 +149,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::STRING;
 {
-  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130141';
 }
 
 =item STRINGS
@@ -150,7 +170,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::UNDEFINED;
 {
-  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130141';
 }
 
 sub out {
@@ -159,7 +179,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::ARRAYREF;
 {
-  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130141';
 }
 
 sub out {
@@ -168,7 +188,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::KEY;
 {
-  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130141';
 }
 
 =item KEYS
@@ -185,7 +205,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::KEY_VALUE;
 {
-  $JavaScript::HashRef::Decode::KEY_VALUE::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::KEY_VALUE::VERSION = '0.130141';
 }
 
 sub out {
@@ -194,11 +214,27 @@ sub out {
 
 package JavaScript::HashRef::Decode::HASHREF;
 {
-  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130140';
+  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130141';
 }
 
 sub out {
     return { map {$_->out} @{ $_[ 0 ] } };
 }
+
+=back
+
+=head1 SEE ALSO
+
+L<Parse::RecDescent>
+
+=head1 AUTHOR
+
+Marco Fontani - L<MFONTANI@cpan.org>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2013 Situation Publishing LTD
+
+=cut
 
 1;
