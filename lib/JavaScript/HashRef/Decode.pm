@@ -1,6 +1,6 @@
 package JavaScript::HashRef::Decode;
 {
-  $JavaScript::HashRef::Decode::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::VERSION = '0.130160';
 }
 
 ## ABSTRACT: JavaScript "simple object" (hashref) decoder
@@ -160,7 +160,8 @@ The L<Parse::RecDescent> internal interface is reused across invocations.
 sub decode_js {
     my ($str) = @_;
 
-    $parser //= Parse::RecDescent->new($js_grammar);
+    $parser = Parse::RecDescent->new($js_grammar)
+        if !defined $parser;
     my $parsed = $parser->hashref($str);
     return $parsed->out;
 }
@@ -176,7 +177,7 @@ sub decode_js {
 
 package JavaScript::HashRef::Decode::NUMBER;
 {
-  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130160';
 }
 
 sub out {
@@ -185,7 +186,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::STRING;
 {
-  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130160';
 }
 
 =item STRINGS
@@ -206,7 +207,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::UNDEFINED;
 {
-  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130160';
 }
 
 sub out {
@@ -215,7 +216,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::TRUE;
 {
-  $JavaScript::HashRef::Decode::TRUE::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::TRUE::VERSION = '0.130160';
 }
 
 sub out {
@@ -224,7 +225,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::FALSE;
 {
-  $JavaScript::HashRef::Decode::FALSE::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::FALSE::VERSION = '0.130160';
 }
 
 sub out {
@@ -233,7 +234,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::ARRAYREF;
 {
-  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130160';
 }
 
 sub out {
@@ -242,7 +243,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::KEY;
 {
-  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130160';
 }
 
 sub out {
@@ -251,7 +252,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::TUPLE;
 {
-  $JavaScript::HashRef::Decode::TUPLE::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::TUPLE::VERSION = '0.130160';
 }
 
 sub out {
@@ -260,7 +261,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::HASHREF;
 {
-  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130142';
+  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130160';
 }
 
 sub out {
