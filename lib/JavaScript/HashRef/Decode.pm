@@ -1,10 +1,11 @@
 package JavaScript::HashRef::Decode;
 {
-  $JavaScript::HashRef::Decode::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::VERSION = '0.130240';
 }
 
 ## ABSTRACT: JavaScript "simple object" (hashref) decoder
 
+use v5.10;
 use strict;
 use warnings;
 use Parse::RecDescent;
@@ -12,21 +13,31 @@ use Exporter qw<import>;
 our @EXPORT_OK = qw<decode_js>;
 
 our $js_grammar = <<'END_GRAMMAR';
-number:     /[0-9]+(\.[0-9]+)?/
+number:     hex | decimal
+hex:        / 0 [xX] [0-9a-fA-F]+ (?! \w ) /x
 {
     $return = bless {
-        value => $item[1],
+        value => hex $item[1],
+    }, 'JavaScript::HashRef::Decode::NUMBER';
+}
+decimal:    /(?: (?: 0 | [1-9][0-9]* ) \. [0-9]*
+               | \. [0-9]+
+               | (?: 0 | [1-9][0-9]* ) )
+             (?: [eE][-+]?[0-9]+ )?
+             (?! \w )/x
+{
+    $return = bless {
+        value => 0+$item[1],
     }, 'JavaScript::HashRef::Decode::NUMBER';
 }
 string_double_quoted:
     m{"             # Starts with a single-quote
       (               # Start capturing *inside* the double-quote
-        (
-            \\.           # An escaped-something
-            |             # .. or
-            [^"]          # Anything that's not a double-quote
-        )*              # 0+ combination of the previous
-
+        [^\\"\r\n\x{2028}\x{2029}]*+     # Any ordinary characters
+        (?:                              # Followed by ...
+            \\ [^\r\n\x{2028}\x{2029}]     # Any backslash sequence
+            [^\\"\r\n\x{2028}\x{2029}]*+   # ... followed by any ordinary characters
+        )*+                              # 0+ times
       )               # End capturing *inside* the double-quote
     "               # Ends with a double-quote
     }x
@@ -38,12 +49,11 @@ string_double_quoted:
 string_single_quoted:
     m{'             # Starts with a single-quote
       (               # Start capturing *inside* the single-quote
-        (
-            \\.           # An escaped-something
-            |             # .. or
-            [^']          # Anything that's not a single-quote
-        )*              # 0+ combination of the previous
-
+        [^\\'\r\n\x{2028}\x{2029}]*+     # Any ordinary characters
+        (?:                              # Followed by ...
+            \\ [^\r\n\x{2028}\x{2029}]     # Any backslash sequence
+            [^\\'\r\n\x{2028}\x{2029}]*+   # ... followed by any ordinary characters
+        )*+                              # 0+ times
       )               # End capturing *inside* the single-quote
     '               # Ends with a single-quote
     }x
@@ -171,15 +181,9 @@ sub decode_js {
 # For each "type", provide an ->out function which returns the proper Perl type
 # for the structure, possibly recursively
 
-=head1 CAVEATS & BUGS
-
-=over
-
-=cut
-
 package JavaScript::HashRef::Decode::NUMBER;
 {
-  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::NUMBER::VERSION = '0.130240';
 }
 
 sub out {
@@ -188,28 +192,39 @@ sub out {
 
 package JavaScript::HashRef::Decode::STRING;
 {
-  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::STRING::VERSION = '0.130240';
 }
 
-=item STRINGS
+my %unescape = (
+    'b'  => "\b",
+    'f'  => "\f",
+    'n'  => "\n",
+    'r'  => "\r",
+    't'  => "\t",
+    'v'  => "\x0B",
+    '"'  => '"',
+    "'"  => "'",
+    '0'  => "\0",
+    '\\' => '\\',
+);
 
-JavaScript string interpolation only works for the following escaped values:
-C<\">, C<\'>, C<\n>, C<\t>.
-
-=cut
+my $unescape_rx = do {
+    my $fixed = join '|', map quotemeta, grep $_, reverse sort keys %unescape;
+    qr/\\($fixed|0(?![0-9])|(x([0-9a-fA-F]{2})|u([0-9a-fA-F]{4}))|.)/;
+};
 
 sub out {
     my $val = $_[ 0 ]->{value};
-    $val =~ s/\\"/"/g;
-    $val =~ s/\\'/'/g;
-    $val =~ s/\\n/\n/g;
-    $val =~ s/\\t/\t/g;
+    $val =~ s{\\u[dD]([89abAB][0-9a-fA-F][0-9a-fA-F])
+              \\u[dD]([c-fC-F][0-9a-fA-F][0-9a-fA-F])}
+             { chr(0x10000 + ((hex($1) - 0x800 << 10) | hex($2) - 0xC00)) }xmsge;
+    $val =~ s/$unescape_rx/$unescape{$1} || ($2 ? chr(hex $+) : $1)/ge;
     return $val;
 }
 
 package JavaScript::HashRef::Decode::UNDEFINED;
 {
-  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::UNDEFINED::VERSION = '0.130240';
 }
 
 sub out {
@@ -218,7 +233,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::TRUE;
 {
-  $JavaScript::HashRef::Decode::TRUE::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::TRUE::VERSION = '0.130240';
 }
 
 sub out {
@@ -227,7 +242,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::FALSE;
 {
-  $JavaScript::HashRef::Decode::FALSE::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::FALSE::VERSION = '0.130240';
 }
 
 sub out {
@@ -236,7 +251,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::ARRAYREF;
 {
-  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::ARRAYREF::VERSION = '0.130240';
 }
 
 sub out {
@@ -245,7 +260,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::KEY;
 {
-  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::KEY::VERSION = '0.130240';
 }
 
 sub out {
@@ -254,7 +269,7 @@ sub out {
 
 package JavaScript::HashRef::Decode::TUPLE;
 {
-  $JavaScript::HashRef::Decode::TUPLE::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::TUPLE::VERSION = '0.130240';
 }
 
 sub out {
@@ -263,14 +278,12 @@ sub out {
 
 package JavaScript::HashRef::Decode::HASHREF;
 {
-  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130220';
+  $JavaScript::HashRef::Decode::HASHREF::VERSION = '0.130240';
 }
 
 sub out {
     return { map {$_->out} @{ $_[ 0 ] } };
 }
-
-=back
 
 =head1 SEE ALSO
 
@@ -281,6 +294,10 @@ The ECMAScript Object specification: L<http://www.ecmascript.org/>
 =head1 AUTHOR
 
 Marco Fontani - L<MFONTANI@cpan.org>
+
+=head1 CONTRIBUTORS
+
+Aaron Crane
 
 =head1 COPYRIGHT
 
