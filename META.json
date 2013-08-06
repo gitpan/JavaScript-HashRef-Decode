@@ -41,7 +41,7 @@
          }
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/mfontani/JavaScript-HashRef-Decode/issues"
@@ -52,6 +52,6 @@
          "web" : "https://github.com/mfontani/JavaScript-HashRef-Decode"
       }
    },
-   "version" : "0.130350"
+   "version" : "0.132180"
 }
 
